@@ -96,14 +96,31 @@ class EDD_Cart_Restrictions {
         add_filter('edd_settings_extensions', array( $this, 'settings' ), 1 );
         add_filter('edd_settings_sections_extensions', array( $this, 'settingsSection') );
 
-        // 
-        add_action( 'download_category_edit_form_fields', array( $this, 'edit_download_category') );
-        add_action( 'download_tag_edit_form_fields', array( $this, 'edit_download_category') );
-        add_action( 'download_category_edit_form_fields', array( $this, 'edit_download_tag') );
-        add_action( 'download_tag_edit_form_fields', array( $this, 'edit_download_tag') );
+        // display form fields for new download category or download tag
+        add_action( 'download_category_add_form_fields', array($this, 'addDownloadCategory' ) );
+        add_action( 'download_category_add_form_fields', array($this, 'addDownloadTag' ) );
+        add_action( 'download_tag_add_form_fields', array($this, 'addDownloadCategory' ) );
+        add_action( 'download_tag_add_form_fields', array($this, 'addDownloadTag' ) );
 
+        // save meta for new download category or new download tag
+        add_action( 'create_download_category', array($this, 'saveTermFields'), 10, 2 );
+        add_action( 'create_download_tag', array($this, 'saveTermFields'), 10, 2 );
+
+        //  display form fields for editing download category or download tag
+        add_action( 'download_category_edit_form_fields', array( $this, 'editDownloadCategory') );
+        add_action( 'download_tag_edit_form_fields', array( $this, 'editDownloadCategory') );
+        add_action( 'download_category_edit_form_fields', array( $this, 'editDownloadTag') );
+        add_action( 'download_tag_edit_form_fields', array( $this, 'editDownloadTag') );
+
+        // save meta for edited download category or new download tag
         add_action( 'edited_download_category', array($this, 'saveTermFields'), 10, 2 );
         add_action( 'edited_download_tag', array($this, 'saveTermFields'), 10, 2 );
+
+        // display excluded download category or download tag in term table
+        add_filter('manage_edit-download_tag_columns', array($this,'addTermColumnHeader'),10,1);
+        add_filter('manage_edit-download_category_columns', array($this,'addTermColumnHeader'),10,1);
+        add_action('manage_download_category_custom_column', array($this,'addTermColumn'),10,3);
+        add_action('manage_download_tag_custom_column', array($this,'addTermColumn'),10,3);
 
         // Handle licensing
 //        if( class_exists( 'EDD_License' ) ) {
@@ -127,15 +144,6 @@ class EDD_Cart_Restrictions {
                 'desc'  => __( 'Configure general cart restriction settings', 'edd-cart-restrictions' ),
                 'type'  => 'header',
             ),
-        );
-
-        $plugin_settings_categories_tags = array(
-            array(
-                'id'    => 'edd_cart_restrictions_settings_categories_tags',
-                'name'  => '<strong>' . __( 'Cart Restrictions Categories and Tags', 'edd-cart-restrictions' ) . '</strong>',
-                'desc'  => __( 'Configure categories and tags restrictions', 'edd-cart-restrictions' ),
-                'type'  => 'header',
-            ),
             array(
                 'id'    => 'edd_cart_restrictions_settings_categories_tags_enabled',
                 'name'  => 'Restrictions on categories and tags enabled',
@@ -149,7 +157,6 @@ class EDD_Cart_Restrictions {
 	if ( version_compare( EDD_VERSION, 2.5, '>=' ) ) {
             // Use the previously noted array key as an array key again and next your settings
             $plugin_settings_general = array( 'cart-restrictions-settings-general' => $plugin_settings_general );
-            $plugin_settings_notification = array( 'cart-restrictions-settings-categories-tags' => $plugin_settings_categories_tags );
         }
 
         return array_merge( $settings, $plugin_settings_general, $plugin_settings_notification );
@@ -157,11 +164,8 @@ class EDD_Cart_Restrictions {
 
     public function settingsSection( $sections ) {
         $sections['cart-restrictions-settings-general'] = 'Cart Restrictions General';
-        $sections['cart-restrictions-settings-categories-tags'] = 'Cart Restrictions Categories and Tags';
         return $sections;
     }
-
-    CONST EDD_PREFIX = 'edd_';
 
     public function __construct() {
         self::pllRegisterStrings();
@@ -211,21 +215,26 @@ class EDD_Cart_Restrictions {
         ) );
     }
 
+    public function addDownloadCategory( ) {
+        $field  = '<div class="form-field">';
+        $field .= '    <label>Excluded Categories in Cart</label>';
+        $field .= self::termChecklist($term, 'download_category', self::CATEGORIES_META_KEY);
+        $field .= '    <p class="description">Select all categories of which downloads cannot be in the cart at the same time.</p>';
+        $field .= '</div>';
+
+        echo $field;
+    }
+
     /**
      * Add a excluded category field to the edit form of a term (category or tag)
      */
-    public function edit_download_category( $term ) {
-        $term_id = $term->term_id;
-        $categories = get_term_meta( $term_id, self::CATEGORIES_META_KEY, true );
-
+    public function editDownloadCategory( $term ) {
         $field  = '<tr class="form-field">';
         $field .= '<th scope="row">';
         $field .= '    <label>Excluded Categories in Cart</label>';
         $field .= '</th>';
         $field .= '    <td>';
-        $field .= '        <ul>';
-        $field .= wp_terms_checklist(0,array('taxonomy' => 'download_category','selected_cats'=>$categories,'echo'=>false,));
-        $field .= '        </ul>';
+        $field .= self::termChecklist($term, 'download_category', self::CATEGORIES_META_KEY);
         $field .= '    <p class="description">Select all categories of which downloads cannot be in the cart at the same time.</p>';
         $field .= '    </td>';
         $field .= '</tr>';
@@ -233,21 +242,26 @@ class EDD_Cart_Restrictions {
         echo $field;
     }
 
+    public function addDownloadTag( ) {
+        $field  = '<div class="form-field">';
+        $field .= '    <label>Excluded Tags in Cart</label>';
+        $field .= self::termChecklist($term, 'download_tag', self::CATEGORIES_META_KEY);
+        $field .= '    <p class="description">Select all tags of which downloads cannot be in the cart at the same time.</p>';
+        $field .= '</div>';
+
+        echo $field;
+    }
+
     /**
      * Add a excluded tag field to the edit form of a term (category or tag)
      */
-    public function edit_download_tag( $term ) {
-        $term_id = $term->term_id;
-        $tags = get_term_meta( $term_id, self::TAGS_META_KEY, true );
-
+    public function editDownloadTag( $term ) {
         $field  = '<tr class="form-field">';
         $field .= '<th scope="row">';
         $field .= '    <label>Excluded Tags in Cart</label>';
         $field .= '</th>';
         $field .= '    <td>';
-        $field .= '        <ul>';
-        $field .= wp_terms_checklist(0,array('taxonomy' => 'download_tag','selected_cats'=>$tags,'echo'=>false,));
-        $field .= '        </ul>';
+        $field .= self::termChecklist($term, 'download_tag', self::TAGS_META_KEY);
         $field .= '    <p class="description">Select all tags of which downloads cannot be in the cart at the same time.</p>';
         $field .= '    </td>';
         $field .= '</tr>';
@@ -263,6 +277,30 @@ class EDD_Cart_Restrictions {
         if ( isset( $_POST['tax_input'] ) && isset( $_POST['tax_input']['download_tag'] ) ) {
             update_term_meta($term_id,self::TAGS_META_KEY, $_POST['tax_input']['download_tag']);
         }
+    }
+
+    protected static function termChecklist( $term, $taxonomy, $meta_key ) {
+        $term_id = $term->term_id;
+        $terms = get_term_meta( $term_id, $meta_key, true );
+
+        $field  = '';
+        $field .= '    <ul>';
+        $field .= wp_terms_checklist(0,array('taxonomy' => $taxonomy,'selected_cats'=>$terms,'echo'=>false,));
+        $field .= '    </ul>';
+
+        return $field;
+    }
+
+    public function addTermColumnHeader($columns) {
+        return array_merge($columns, array('cart_restrictions'=>'Cart Excluded Categories and Tags'));
+    }
+
+    public function addTermColumn($content, $column_name, $term_id) {
+        if ( $column_name != 'cart_restrictions' ) {
+            return $content;
+        }
+
+        return $content;
     }
 
 }
