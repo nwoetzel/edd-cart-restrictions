@@ -72,16 +72,16 @@ class EDD_Cart_Restrictions {
      */
     private function includes() {
         // Include scripts
-//        require_once EDD_PLUGIN_NAME_DIR . 'includes/scripts.php';
-//        require_once EDD_PLUGIN_NAME_DIR . 'includes/functions.php';
+//        require_once EDD_CART_RESTRICTIONS_DIR . 'includes/scripts.php';
+//        require_once EDD_CART_RESTRICTIONS_DIR . 'includes/functions.php';
         /**
          * @todo        The following files are not included in the boilerplate, but
          *              the referenced locations are listed for the purpose of ensuring
          *              path standardization in EDD extensions. Uncomment any that are
          *              relevant to your extension, and remove the rest.
          */
-//        require_once EDD_PLUGIN_NAME_DIR . 'includes/shortcodes.php';
-//        require_once EDD_PLUGIN_NAME_DIR . 'includes/widgets.php';
+//        require_once EDD_CART_RESTRICTIONS_DIR . 'includes/shortcodes.php';
+//        require_once EDD_CART_RESTRICTIONS_DIR . 'includes/widgets.php';
     }
 
     /**
@@ -159,7 +159,7 @@ class EDD_Cart_Restrictions {
             $plugin_settings_general = array( 'cart-restrictions-settings-general' => $plugin_settings_general );
         }
 
-        return array_merge( $settings, $plugin_settings_general, $plugin_settings_notification );
+        return array_merge( $settings, $plugin_settings_general );
     }
 
     public function settingsSection( $sections ) {
@@ -299,6 +299,8 @@ class EDD_Cart_Restrictions {
         if ( $column_name != 'cart_restrictions' ) {
             return $content;
         }
+        $categories = get_term_meta( $term_id, self::CATEGORIES_META_KEY, true );
+        $tags = get_term_meta( $term_id, self::TAGS_META_KEY, true );
 
         return $content;
     }
