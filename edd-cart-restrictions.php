@@ -292,17 +292,31 @@ class EDD_Cart_Restrictions {
     }
 
     public function addTermColumnHeader($columns) {
-        return array_merge($columns, array('cart_restrictions'=>'Cart Excluded Categories and Tags'));
+        return array_merge($columns, array('cart_restrictions'=>'Cart Excluded'));
     }
 
     public function addTermColumn($content, $column_name, $term_id) {
         if ( $column_name != 'cart_restrictions' ) {
             return $content;
         }
-        $categories = get_term_meta( $term_id, self::CATEGORIES_META_KEY, true );
-        $tags = get_term_meta( $term_id, self::TAGS_META_KEY, true );
+        $categories_ids = get_term_meta( $term_id, self::CATEGORIES_META_KEY, true );
+        $tags_ids = get_term_meta( $term_id, self::TAGS_META_KEY, true );
+
+        $categories_names = self::termNames('download_category',$categories_ids);
+        $tags_names = self::termNames('download_tag',$tags_ids);
+
+        echo '<strong>Categories:</strong><br>'.join(', ',$categories_names).'<br>';
+        echo '<strong>Tags:</strong><br>'.join(', ',$tags_names);
 
         return $content;
+    }
+
+    protected static function termNames($taxonomy,$include) {
+        return get_terms( array(
+            'taxonomy' => $taxonomy,
+            'include' => $include,
+            'fields' => 'names',
+        ));
     }
 
 }
