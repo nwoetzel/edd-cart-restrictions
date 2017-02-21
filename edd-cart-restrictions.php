@@ -22,6 +22,8 @@ if( !class_exists( 'EDD_Cart_Restrictions' ) ) {
  */
 class EDD_Cart_Restrictions {
 
+    private $downloadCartConflicts = array();
+
     /**
      * @var EDD_Cart_Restrictions $instance The one true EDD_Cart_Restrictions
      * @since       1.0.0
@@ -121,6 +123,15 @@ class EDD_Cart_Restrictions {
         add_filter('manage_edit-download_category_columns', array($this,'addTermColumnHeader'),10,1);
         add_action('manage_download_category_custom_column', array($this,'addTermColumn'),10,3);
         add_action('manage_download_tag_custom_column', array($this,'addTermColumn'),10,3);
+
+        // hide link when it might conflict with the current cart
+        add_action('edd_purchase_link_top',array($this,'purchaseLinkTop'), 33, 2);
+        add_action('edd_purchase_link_end',array($this,'purchaseLinkEnd'), 34, 2);
+
+        // before adding item to cart
+        add_action('edd_pre_add_to_cart', array($this,'preAddToCart'), 10, 2 );
+//        add_action('wp_ajax_edd_add_to_cart',array($this,'ajaxAddToCart'), 9, 0 );
+//        add_action('wp_ajax_nopriv_edd_add_to_cart',array($this,'ajaxAddToCart'), 9, 0 );
 
         // Handle licensing
 //        if( class_exists( 'EDD_License' ) ) {
@@ -270,13 +281,19 @@ class EDD_Cart_Restrictions {
     }
 
     public function saveTermFields($term_id, $taxonomy) {
-        if ( isset( $_POST['tax_input'] ) && isset( $_POST['tax_input']['download_category'] ) ) {
-            update_term_meta($term_id,self::CATEGORIES_META_KEY, $_POST['tax_input']['download_category']);
+        $excluded_categories = array();
+        $excluded_tags = array();
+        if ( isset( $_POST['tax_input'] ) ) {
+            if ( isset( $_POST['tax_input']['download_category'] ) ) {
+                $excluded_categories = $_POST['tax_input']['download_category'];
+            }
+            if ( isset( $_POST['tax_input']['download_tag'] ) ) {
+                $excluded_tags = $_POST['tax_input']['download_tag'];
+            }
         }
 
-        if ( isset( $_POST['tax_input'] ) && isset( $_POST['tax_input']['download_tag'] ) ) {
-            update_term_meta($term_id,self::TAGS_META_KEY, $_POST['tax_input']['download_tag']);
-        }
+        update_term_meta($term_id,self::CATEGORIES_META_KEY, $excluded_categories);
+        update_term_meta($term_id,self::TAGS_META_KEY, $excluded_tags);
     }
 
     protected static function termChecklist( $term, $taxonomy, $meta_key ) {
@@ -312,11 +329,139 @@ class EDD_Cart_Restrictions {
     }
 
     protected static function termNames($taxonomy,$include) {
+        if(empty($include)) {
+            return array();
+        }
+
         return get_terms( array(
             'taxonomy' => $taxonomy,
             'include' => $include,
             'fields' => 'names',
         ));
+    }
+
+    public function purchaseLinkTop($download_id, $args) {
+        $conflicts = $this->getDownloadCartConflicts($download_id);
+        if (empty($conflicts)) {
+            return;
+        }
+        echo '<a class="button edd-submit">This download cannot be added due to conflicting downloads in the cart</a>';
+        echo '<div class="edd-cart-restrictions" style="display: none;">';
+    }
+
+    public function purchaseLinkEnd($download_id, $args) {
+        $conflicts = $this->getDownloadCartConflicts($download_id);
+        if (empty($conflicts)) {
+            return;
+        }
+        echo '</div>';
+    }
+
+    public function preAddToCart($download_id, $options) {
+        $conflicts = $this->getDownloadCartConflicts($download_id);
+
+        if ( !empty($conflicts)) {
+            edd_die();
+        }
+
+        return;
+    }
+
+    public function ajaxAddToCart() {
+        if ( !isset( $_POST['download_id'] ) ) {
+            return;
+        }
+
+        $download_id = $_POST['download_id'];
+
+        $this->preAddToCart($download_id,array());
+    }
+
+    protected function getDownloadCartConflicts($download_id) {
+        $download_id = intval($download_id);
+        if ( array_key_exists($download_id,$this->downloadCartConflicts)) {
+            return $this->downloadCartConflicts[$download_id];
+        }
+
+        $conflicts = array();
+
+        // get the categories and tags for the current download
+        list($download_category_ids,$download_tag_ids) = self::downloadCategoryAndTagIds($download_id);
+
+        // if the current download has neither categories nor tags, there is no conflict
+        if ( empty($download_category_ids) && empty($download_tag_ids) ) {
+            return $this->downloadCartConflicts[$download_id] = $conflicts;
+        }
+
+        // http://docs.easydigitaldownloads.com/article/1414-edd-get-cart-contents
+        $cart_contents = edd_get_cart_contents();
+
+        // if there is nothing in the cart, there is no conflict
+        if (empty($cart_contents)) {
+            return $this->downloadCartConflicts[$download_id] = $conflicts;
+        }
+
+        // all excluded categories and tags for the current download
+        list($download_excluded_category_ids, $download_excluded_tag_ids) = self::excludedCategoryAndTagIds($download_category_ids,$download_tag_ids);
+
+        // test against each individual download in the cart
+        foreach ($cart_contents as $item) {
+            list($category_ids,$tag_ids) = self::downloadCategoryAndTagIds(intval($item['id']));
+
+            // check if the present categories and tags do conflict with the download
+            list($conflicting_category_ids,$conflicting_tag_ids) = self::conflictingCategoriesAndTags($category_ids,$tag_ids,$download_excluded_category_ids, $download_excluded_tag_ids);
+
+            if ( !empty($conflicting_category_ids) || !empty($conflicting_tag_ids)) {
+                $conflicts[] = intval($item['id']);
+            }
+
+            list($excluded_category_ids, $excluded_tag_ids) = self::excludedCategoryAndTagIds($category_ids,$tag_ids);
+            list($conflicting_category_ids,$conflicting_tag_ids) = self::conflictingCategoriesAndTags($download_category_ids,$download_tag_ids,$excluded_category_ids, $excluded_tag_ids);
+
+            if ( !empty($conflicting_category_ids) || !empty($conflicting_tag_ids)) {
+                $conflicts[] = intval($item['id']);
+            }
+        }
+
+        return $this->downloadCartConflicts[$download_id] = $conflicts;
+    }
+
+    protected static function downloadCategoryAndTagIds($download_id) {
+        $download_category_ids = wp_get_post_terms($download_id, 'download_category',array(
+                'taxonomy' => 'download',
+                'fields' => 'ids',
+        ));
+        $download_tag_ids = wp_get_post_terms($download_id, 'download_tag',array(
+                'taxonomy' => 'download',
+                'fields' => 'ids',
+        ));
+
+        return array($download_category_ids,$download_tag_ids);
+    }
+
+    protected static function excludedCategoryAndTagIds($download_category_ids,$download_tag_ids) {
+        $download_excluded_category_ids = array();
+        $download_excluded_tag_ids = array();
+
+        foreach (array_merge($download_category_ids,$download_tag_ids) as $id) {
+            $excluded_category_ids = get_term_meta( $id, self::CATEGORIES_META_KEY, true );
+            $excluded_tag_ids = get_term_meta( $id, self::TAGS_META_KEY, true );
+
+            $download_excluded_category_ids = array_unique(array_merge($download_excluded_category_ids,$excluded_category_ids));
+            $download_excluded_tag_ids = array_unique(array_merge($download_excluded_tag_ids,$excluded_tag_ids));
+        }
+
+        return array($download_excluded_category_ids,$download_excluded_tag_ids);
+    }
+
+    /**
+     * Check if categories and tags that would be added to the cart are compatible with the ones that are present
+     */ 
+    protected function conflictingCategoriesAndTags($categories_ids_new, $tags_ids_new, $categories_ids_excluded, $tags_ids_excluded) {
+        return array(
+            array_intersect($categories_ids_new,$categories_ids_excluded),
+            array_intersect($tags_ids_new,$tags_ids_excluded),
+        );
     }
 
 }
