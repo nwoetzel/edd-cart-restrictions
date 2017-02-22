@@ -22,7 +22,14 @@ if( !class_exists( 'EDD_Cart_Restrictions' ) ) {
  */
 class EDD_Cart_Restrictions {
 
-    private $downloadCartConflicts = array();
+    /**
+     * For a given download_id (key) a list (array) of conflicting downloads is stored.
+     *
+     * @var         array
+     * @see         getDownloadCartConflicts
+     * @since       1.0.0
+     */
+   private $downloadCartConflicts = array();
 
     /**
      * @var EDD_Cart_Restrictions $instance The one true EDD_Cart_Restrictions
@@ -43,6 +50,7 @@ class EDD_Cart_Restrictions {
             self::$instance->setup_constants();
             self::$instance->includes();
 //            self::$instance->load_textdomain();
+            self::$instance->registerMeta();
             self::$instance->hooks();
             self::pllRegisterStrings();
         }
@@ -109,10 +117,10 @@ class EDD_Cart_Restrictions {
         add_action( 'create_download_tag', array($this, 'saveTermFields'), 10, 2 );
 
         //  display form fields for editing download category or download tag
-        add_action( 'download_category_edit_form_fields', array( $this, 'editDownloadCategory') );
-        add_action( 'download_tag_edit_form_fields', array( $this, 'editDownloadCategory') );
-        add_action( 'download_category_edit_form_fields', array( $this, 'editDownloadTag') );
-        add_action( 'download_tag_edit_form_fields', array( $this, 'editDownloadTag') );
+        add_action( 'download_category_edit_form_fields', array( $this, 'editDownloadCategory'), 10, 2 );
+        add_action( 'download_tag_edit_form_fields', array( $this, 'editDownloadCategory'), 10, 2 );
+        add_action( 'download_category_edit_form_fields', array( $this, 'editDownloadTag'), 10, 2 );
+        add_action( 'download_tag_edit_form_fields', array( $this, 'editDownloadTag'), 10, 2 );
 
         // save meta for edited download category or new download tag
         add_action( 'edited_download_category', array($this, 'saveTermFields'), 10, 2 );
@@ -173,25 +181,18 @@ class EDD_Cart_Restrictions {
         return array_merge( $settings, $plugin_settings_general );
     }
 
+    /**
+     * Add a settings section.
+     * uses edd filter: edd_settings_sections_extensions
+     *
+     * @access      public
+     * @since       1.0.0
+     * @param       array $settings The existing EDD settings array
+     * @return      array The modified EDD settings array
+     */
     public function settingsSection( $sections ) {
         $sections['cart-restrictions-settings-general'] = 'Cart Restrictions General';
         return $sections;
-    }
-
-    public function __construct() {
-        self::pllRegisterStrings();
-    }
-
-    protected static function pllRegisterStrings() {
-       if (!function_exists('pll_register_string')) {
-           return;
-       }
-//       pll_register_string( $field.' '.$key, $values[$key], 'HITS EDD');
-    }
-
-    protected static function trans($string) {
-        if (!function_exists('pll__')) return $string;
-        return pll__($string);
     }
 
     /**
@@ -208,8 +209,15 @@ class EDD_Cart_Restrictions {
      */
     CONST TAGS_META_KEY = '_edd_cart_restrictions_tags';
 
-
-    public function registerMeta() {
+    /**
+     * Register meta keys for terms, which are used for the download_category and download_tag.
+     * @see https://developer.wordpress.org/reference/functions/register_meta/ 
+     *
+     * @access      protected
+     * @since       1.0.0
+     * @return      void
+     */
+    protected function registerMeta() {
         register_meta( 'term', self::CATEGORIES_META_KEY,
             array(
                 'type' => array(),
@@ -226,7 +234,17 @@ class EDD_Cart_Restrictions {
         ) );
     }
 
-    public function addDownloadCategory( ) {
+    /**
+     * Echo a field to choose download_category to a new term add form.
+     * uses wp action: download_category_add_form_field and download_tag_add_form_field
+     * @see https://developer.wordpress.org/reference/hooks/taxonomy_add_form_fields/ 
+     *
+     * @access      public
+     * @since       1.0.0
+     * @param       $taxonomy string The taxonomy slug
+     * @return      void
+     */
+    public function addDownloadCategory($taxonomy) {
         $field  = '<div class="form-field">';
         $field .= '    <label>Excluded Categories in Cart</label>';
         $field .= self::termChecklist($term, 'download_category', self::CATEGORIES_META_KEY);
@@ -237,9 +255,17 @@ class EDD_Cart_Restrictions {
     }
 
     /**
-     * Add a excluded category field to the edit form of a term (category or tag)
+     * Echo a field to choose download_category to an existing term edit form.
+     * uses wp action: download_category_edit_form_fields and download_tag_edit_form_fields
+     * @see https://developer.wordpress.org/reference/hooks/taxonomy_edit_form_fields/ 
+     *
+     * @access      public
+     * @since       1.0.0
+     * @param       $term object current taxonomy term object
+     * @param       $taxonomy string The taxonomy slug
+     * @return      void
      */
-    public function editDownloadCategory( $term ) {
+    public function editDownloadCategory( $term, $taxonomy ) {
         $field  = '<tr class="form-field">';
         $field .= '<th scope="row">';
         $field .= '    <label>Excluded Categories in Cart</label>';
@@ -253,7 +279,17 @@ class EDD_Cart_Restrictions {
         echo $field;
     }
 
-    public function addDownloadTag( ) {
+    /**
+     * Echo a field to choose download_tag to a new term add form.
+     * uses wp action: download_category_add_form_field and download_tag_add_form_field
+     * @see https://developer.wordpress.org/reference/hooks/taxonomy_add_form_fields/ 
+     *
+     * @access      public
+     * @since       1.0.0
+     * @param       $taxonomy string The taxonomy slug
+     * @return      void
+     */
+    public function addDownloadTag($taxonomy) {
         $field  = '<div class="form-field">';
         $field .= '    <label>Excluded Tags in Cart</label>';
         $field .= self::termChecklist($term, 'download_tag', self::CATEGORIES_META_KEY);
@@ -264,9 +300,17 @@ class EDD_Cart_Restrictions {
     }
 
     /**
-     * Add a excluded tag field to the edit form of a term (category or tag)
+     * Echo a field to choose download_tag to an existing term edit form.
+     * uses wp action: download_category_edit_form_fields and download_tag_edit_form_fields
+     * @see https://developer.wordpress.org/reference/hooks/taxonomy_edit_form_fields/ 
+     *
+     * @access      public
+     * @since       1.0.0
+     * @param       $term object current taxonomy term object
+     * @param       $taxonomy string The taxonomy slug
+     * @return      void
      */
-    public function editDownloadTag( $term ) {
+    public function editDownloadTag( $term, $taxonomy ) {
         $field  = '<tr class="form-field">';
         $field .= '<th scope="row">';
         $field .= '    <label>Excluded Tags in Cart</label>';
