@@ -52,7 +52,6 @@ class EDD_Cart_Restrictions {
 //            self::$instance->load_textdomain();
             self::$instance->registerMeta();
             self::$instance->hooks();
-            self::pllRegisterStrings();
         }
         return self::$instance;
     }
@@ -324,7 +323,18 @@ class EDD_Cart_Restrictions {
         echo $field;
     }
 
-    public function saveTermFields($term_id, $taxonomy) {
+    /**
+     * save taxonomy input for download_category and download_tag that was chosen for a new or edited term.
+     * uses wp action: edited_download_category and edited_download_tag
+     * @see https://developer.wordpress.org/reference/hooks/edited_taxonomy/ 
+     *
+     * @access      public
+     * @since       1.0.0
+     * @param       $term_id int term id
+     * @param       $tt_id int term taxonomy id
+     * @return      void
+     */
+    public function saveTermFields($term_id, $tt_id) {
         $excluded_categories = array();
         $excluded_tags = array();
         if ( isset( $_POST['tax_input'] ) ) {
@@ -340,6 +350,17 @@ class EDD_Cart_Restrictions {
         update_term_meta($term_id,self::TAGS_META_KEY, $excluded_tags);
     }
 
+    /**
+     * Display a list of checkboxes of terms for the taxonomy, selecting the ones that are saved in the term's meta.
+     * @see  addDownloadCategory, addDownloadTag, editDownloadCategory, editDownloadTag
+     *
+     * @access      protected
+     * @since       1.0.0
+     * @param       $term object current taxonomy term object
+     * @param       $taxonomy string taxonomy slug
+     * @param       $meta_key string the meta_key to retrive the currently checked fields
+     * @return      string the html with checkboxes with each term of the taxonomy with checkboxes checked, when they are stored in the term's meta
+     */
     protected static function termChecklist( $term, $taxonomy, $meta_key ) {
         $term_id = $term->term_id;
         $terms = get_term_meta( $term_id, $meta_key, true );
@@ -352,10 +373,32 @@ class EDD_Cart_Restrictions {
         return $field;
     }
 
+    /**
+     * Add a custom column heading with key and description for taxonomy tables.
+     * uses wp action: manage_edit-download_category_columns and manage_edit-download_tag_columns
+     * @see  https://codex.wordpress.org/Plugin_API/Filter_Reference/manage_$taxonomy_id_columns
+     *
+     * @access      public
+     * @since       1.0.0
+     * @param       $columns array column_name => Heading
+     * @return      array $columns extended by the cart_restriction
+     */
     public function addTermColumnHeader($columns) {
         return array_merge($columns, array('cart_restrictions'=>'Cart Excluded'));
     }
 
+    /**
+     * Add content to the custom column 'cart_restrictions'.
+     * uses wp filter: manage_download_category_custom_column and manage_download_tag_custom_column 
+     * @see https://developer.wordpress.org/reference/hooks/manage_this-screen-taxonomy_custom_column/
+     *
+     * @access      public
+     * @since       1.0.0
+     * @param       $content string the content of the cell
+     * @param       $column_name string the column name manipulated
+     * @param       $term_id int the current term (i.e. row)
+     * @return      string the modified content
+     */
     public function addTermColumn($content, $column_name, $term_id) {
         if ( $column_name != 'cart_restrictions' ) {
             return $content;
@@ -372,6 +415,16 @@ class EDD_Cart_Restrictions {
         return $content;
     }
 
+    /**
+     * Get term names for a given taxonomy and a list of term ids.
+     * @see https://developer.wordpress.org/reference/functions/get_terms/
+     *
+     * @access      protected 
+     * @since       1.0.0
+     * @param       $taxonomy string the taxonomy slug
+     * @param       $include int[] term ids
+     * @return      string[] the names of the terms in $include for that taxonomy
+     */
     protected static function termNames($taxonomy,$include) {
         if(empty($include)) {
             return array();
@@ -384,6 +437,18 @@ class EDD_Cart_Restrictions {
         ));
     }
 
+    /**
+     * Echo HTML that comes before the purchase link/button. Will hide the link, if the download conflicts with downloads in the cart.
+     * uses edd action: edd_purchase_link_top
+     * @see http://docs.easydigitaldownloads.com/article/510-edd-purchase-link-top
+     * @see purchaseLinkEnd
+     *
+     * @access      public
+     * @since       1.0.0 
+     * @param       $download_id int the id of the download for the purchase link
+     * @param       $args array information about the purchase linke
+     * @return      void
+     */
     public function purchaseLinkTop($download_id, $args) {
         $conflicts = $this->getDownloadCartConflicts($download_id);
         if (empty($conflicts)) {
@@ -393,6 +458,18 @@ class EDD_Cart_Restrictions {
         echo '<div class="edd-cart-restrictions" style="display: none;">';
     }
 
+    /**
+     * Echo HTML that comes after the purchase link/button. Will close the html tag if necessary, if the download conflicts with downloads in the cart.
+     * uses edd action: edd_purchase_link_end
+     * @see http://docs.easydigitaldownloads.com/article/509-edd-purchase-link-end
+     * @see purchaseLinkTop
+     *
+     * @access      public
+     * @since       1.0.0 
+     * @param       $download_id int the id of the download for the purchase link
+     * @param       $args array information about the purchase linke
+     * @return      void
+     */
     public function purchaseLinkEnd($download_id, $args) {
         $conflicts = $this->getDownloadCartConflicts($download_id);
         if (empty($conflicts)) {
@@ -401,6 +478,18 @@ class EDD_Cart_Restrictions {
         echo '</div>';
     }
 
+    /**
+     * Check if a download can be added to the cart by checking if there are any conflicts with items in the cart.
+     * If there is a conflict, calls edd_die(), otherwise returns.
+     * use edd action: edd_pre_add_to_cart
+     * @see https://github.com/easydigitaldownloads/easy-digital-downloads/blob/2.6.17/includes/cart/functions.php#L172
+     *
+     * @access      public
+     * @since       1.0.0 
+     * @param       $download_id int the id of the download for the purchase link
+     * @param       $options the options for the download to add
+     * @return      void
+     */
     public function preAddToCart($download_id, $options) {
         $conflicts = $this->getDownloadCartConflicts($download_id);
 
@@ -411,6 +500,15 @@ class EDD_Cart_Restrictions {
         return;
     }
 
+    /**
+     * for an ajax call, terminate if the $_POST['download_id'] conflicts with downloads in the cart.
+     * Used in edd action: wp_ajax_nopriv_edd_add_to_cart and wp_ajax_edd_add_to_cart
+     * @see         preAddToCart
+     *
+     * @access      public
+     * @since       1.0.0
+     * @return      void
+     */
     public function ajaxAddToCart() {
         if ( !isset( $_POST['download_id'] ) ) {
             return;
@@ -421,6 +519,9 @@ class EDD_Cart_Restrictions {
         $this->preAddToCart($download_id,array());
     }
 
+    /**
+     * 
+     */
     protected function getDownloadCartConflicts($download_id) {
         $download_id = intval($download_id);
         if ( array_key_exists($download_id,$this->downloadCartConflicts)) {
@@ -470,6 +571,15 @@ class EDD_Cart_Restrictions {
         return $this->downloadCartConflicts[$download_id] = $conflicts;
     }
 
+    /**
+     * Get all assigned download_category and download_tag ids to a download post.
+     *
+     * @access      protected
+     * @since       1.0.0 
+     *
+     * @param       $download_id int the download in question
+     * @return      array of array of download_category ids and download_tag ids
+     */
     protected static function downloadCategoryAndTagIds($download_id) {
         $download_category_ids = wp_get_post_terms($download_id, 'download_category',array(
                 'taxonomy' => 'download',
@@ -483,6 +593,16 @@ class EDD_Cart_Restrictions {
         return array($download_category_ids,$download_tag_ids);
     }
 
+    /**
+     * Comulate all excluded download_category and download_tag ids for a given list of download_category and download_tag ids using the meta data for excluded terms.
+     *
+     * @access      protected
+     * @since       1.0.0 
+     *
+     * @param       $download_category_ids int[] all download_category ids for a download
+     * @param       $download_tag_ids int[] all download_tag ids for a download
+     * @return      array of array of excluded download_category ids and download_tag ids
+     */
     protected static function excludedCategoryAndTagIds($download_category_ids,$download_tag_ids) {
         $download_excluded_category_ids = array();
         $download_excluded_tag_ids = array();
@@ -499,7 +619,15 @@ class EDD_Cart_Restrictions {
     }
 
     /**
-     * Check if categories and tags that would be added to the cart are compatible with the ones that are present
+     * Given a list of category ids (new) and category ids (excluded) derived the intersect. Similarly for tag ids. If the resulting sets are empty, there is no conflict
+     *
+     * @access      protected
+     * @since       1.0.0 
+     * @param       $categories_ids_new int[] ids for download_category of a download that should be added to the cart
+     * @param       $tags_ids_new int[] ids for download_tag of a download that should be added to the cart
+     * @param       $categories_ids_excluded int[] ids for download_category that are derived from the meta_data of terms of a download that is already in the cart
+     * @param       $tag_ids_excluded int[] ids for download_tag that are derived from the meta_data of terms of a download that is already in the cart
+     * @return      array of arrays of the intersect between ids_new and ids_exluded (for category and tag each)
      */ 
     protected function conflictingCategoriesAndTags($categories_ids_new, $tags_ids_new, $categories_ids_excluded, $tags_ids_excluded) {
         return array(
