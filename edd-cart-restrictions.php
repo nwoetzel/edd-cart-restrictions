@@ -4,7 +4,7 @@
  * Plugin Name: Easy Digital Downloads Cart restrictions
  * Plugin URI:  https://github.com/nwoetzel/edd-cart-restrictions
  * Description: This plugin extends easy-digital-downloads to restrict the items that can be added to the cart.
- * Version:     1.0.0
+ * Version:     1.0.1
  * Author:      Nils Woetzel
  * Author URI:  https://github.com/nwoetzel
  * Text Domain: edd-cart-restrictions
@@ -65,7 +65,7 @@ class EDD_Cart_Restrictions {
      */
     private function setup_constants() {
         // Plugin version
-        define( 'EDD_CART_RESTRICTIONS_VER', '1.0.0' );
+        define( 'EDD_CART_RESTRICTIONS_VER', '1.0.1' );
         // Plugin path
         define( 'EDD_CART_RESTRICTIONS_DIR', plugin_dir_path( __FILE__ ) );
         // Plugin URL
@@ -197,15 +197,15 @@ class EDD_Cart_Restrictions {
 
     /**
      * define the meta key for excluded categories
-     * @since 1.0.0
-     * @var string
+     * @since       1.0.0
+     * @var         string
      */
     CONST CATEGORIES_META_KEY = '_edd_cart_restrictions_categories';
 
     /**
      * define the meta key for excluded tags
-     * @since 1.0.0
-     * @var string
+     * @since       1.0.0
+     * @var         string
      */
     CONST TAGS_META_KEY = '_edd_cart_restrictions_tags';
 
@@ -447,7 +447,7 @@ class EDD_Cart_Restrictions {
      * @access      public
      * @since       1.0.0 
      * @param       $download_id int the id of the download for the purchase link
-     * @param       $args array information about the purchase linke
+     * @param       $args array information about the purchase link
      * @return      void
      */
     public function purchaseLinkTop($download_id, $args) {
@@ -460,6 +460,15 @@ class EDD_Cart_Restrictions {
         echo '<div class="edd-cart-restrictions" style="display: none;">';
     }
 
+    /**
+     * Generate an html table with rows for each confliting download in the cart. 
+     * @see purchaseLinkTop
+     *
+     * @access      protected
+     * @since       1.0.1 
+     * @param       $conflicts int[] id of conflicting download posts in the cart
+     * @return      string html table
+     */
     protected function conflictsTable($conflicts) {
         if ( empty( $conflicts)) {
             return '';
