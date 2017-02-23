@@ -23,7 +23,7 @@ When a conflicting download is displayed, the purchase link (add to cart button)
 Download the latest release from github as zip and install it through wordpress.
 Or use [wp-cli](http://wp-cli.org/) with the latest release:
 <pre>
-wp-cli.phar plugin install https://github.com/nwoetzel/edd-cart-resstrictions/archive/1.0.0.zip --activate
+wp-cli.phar plugin install https://github.com/nwoetzel/edd-cart-restrictions/archive/1.0.0.zip --activate
 </pre>
 
 == Frequently Asked Questions ==
