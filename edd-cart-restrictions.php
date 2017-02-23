@@ -137,6 +137,7 @@ class EDD_Cart_Restrictions {
 
         // before adding item to cart
         add_action('edd_pre_add_to_cart', array($this,'preAddToCart'), 10, 2 );
+        add_action('edd_post_add_to_cart', array($this,'clearDownloadCartConflicts'), 10, 3 );
 //        add_action('wp_ajax_edd_add_to_cart',array($this,'ajaxAddToCart'), 9, 0 );
 //        add_action('wp_ajax_nopriv_edd_add_to_cart',array($this,'ajaxAddToCart'), 9, 0 );
 
@@ -520,7 +521,30 @@ class EDD_Cart_Restrictions {
     }
 
     /**
-     * 
+     * clear the conflicts when the cart has changed
+     * use edd action: edd_post_add_to_cart
+     * @see https://github.com/easydigitaldownloads/easy-digital-downloads/blob/2.6.17/includes/cart/functions.php#L273
+     * @see getDownloadCartConflicts
+     *
+     * @access      public
+     * @since       1.0.0
+     * @param       $download_id int post_id of the download that was added
+     * @param       $options array options for the download added
+     * @param       $items array items added to the cart
+     * @return      void
+     */
+    public function clearDownloadCartConflicts($download_id, $options, $items) {
+      $this->downloadCartConflicts = array();
+    }
+
+    /**
+     * For a $download_id check if there are any downloads in the cart, that might conflict through the excluded tags or categories.
+     * Caches the information for a download, if it is called multiple times.
+     *
+     * @access      protected
+     * @since       1.0.0
+     * @param       $download_id int the download post id that might conflict with items in the cart
+     * @return      int[] conflicting donwload ids in the cart
      */
     protected function getDownloadCartConflicts($download_id) {
         $download_id = intval($download_id);
