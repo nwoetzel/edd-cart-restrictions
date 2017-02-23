@@ -30,8 +30,8 @@ wp-cli.phar plugin install https://github.com/nwoetzel/edd-cart-resstrictions/ar
 
 = Is it guaranteed that the cart has no conflicting products? =
 
-The plugin is not tested thoroughly. Please check the source and open an issue, if you think there is problem in the logic.
-In a future version, the cart before the checkout will be checked (which does not happen currently) and checkout will be disabled. This could be an option. With that, it would be easier that a customer puts everything in the cart, and cleans it before checkout.
+The plugin is not tested thoroughly. Please check the source and open an issue, if you think there is a problem in the logic.
+In a future version, the cart before the checkout will be checked (which does not happen currently) and the checkout will be disabled. This could be an option later. With that, it would be easier that a customer puts everything in the cart, and cleans it before checkout.
 
 == Screenshots ==
 
