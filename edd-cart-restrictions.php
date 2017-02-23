@@ -455,8 +455,33 @@ class EDD_Cart_Restrictions {
         if (empty($conflicts)) {
             return;
         }
-        echo '<a class="button edd-submit">This download cannot be added due to conflicting downloads in the cart</a>';
+        echo '<a class="button red edd-submit">This download cannot be added due to '.(count($conflicts)).' conflicting downloads in the cart</a>';
+        echo $this->conflictsTable($conflicts);
         echo '<div class="edd-cart-restrictions" style="display: none;">';
+    }
+
+    protected function conflictsTable($conflicts) {
+        if ( empty( $conflicts)) {
+            return '';
+        }
+
+        $table  = '<table>';
+        $table .= '  <thead>';
+        $table .= '    <tr>';
+        $table .= '      <th>Conflicting download in cart</th>';
+        $table .= '    </tr>';
+        $table .= '  </thead>';
+        $downloads = get_posts(array('post_type'=>'download','include'=>$conflicts,));
+        foreach ($downloads as $download) {
+            $table .= '    <tr>';
+            $table .= '      <td><a href="'.esc_url( get_permalink($download)).'">'.$download->post_title.'</a></td>';
+            $table .= '    </tr>';
+        }
+        $table .= '  <tbody>';
+        $table .= '  </tbody>';
+        $table .= '</table>';
+
+        return $table;
     }
 
     /**
@@ -635,8 +660,13 @@ class EDD_Cart_Restrictions {
             $excluded_category_ids = get_term_meta( $id, self::CATEGORIES_META_KEY, true );
             $excluded_tag_ids = get_term_meta( $id, self::TAGS_META_KEY, true );
 
-            $download_excluded_category_ids = array_unique(array_merge($download_excluded_category_ids,$excluded_category_ids));
-            $download_excluded_tag_ids = array_unique(array_merge($download_excluded_tag_ids,$excluded_tag_ids));
+            if( !empty($excluded_category_ids)) {
+                $download_excluded_category_ids = array_unique(array_merge($download_excluded_category_ids,$excluded_category_ids));
+            }
+
+            if( !empty($excluded_tag_ids)) {
+                $download_excluded_tag_ids = array_unique(array_merge($download_excluded_tag_ids,$excluded_tag_ids));
+            }
         }
 
         return array($download_excluded_category_ids,$download_excluded_tag_ids);
