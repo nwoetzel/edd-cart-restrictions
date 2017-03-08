@@ -277,9 +277,9 @@ class EDD_Cart_Restrictions {
      */
     public function addDownloadCategory($taxonomy) {
         $field  = '<div class="form-field">';
-        $field .= '    <label>'.__( 'Excluded Categories in Cart', self::TEXT_DOAMIN ).'</label>';
+        $field .= '    <label>'.__( 'Excluded Categories in Cart', self::TEXT_DOMAIN ).'</label>';
         $field .= self::termChecklist($term, 'download_category', self::CATEGORIES_META_KEY);
-        $field .= '    <p class="description">'.__( 'Select all categories of which downloads cannot be in the cart at the same time.', self::TEXT_DOAMIN ).'</p>';
+        $field .= '    <p class="description">'.__( 'Select all categories of which downloads cannot be in the cart at the same time.', self::TEXT_DOMAIN ).'</p>';
         $field .= '</div>';
 
         echo $field;
@@ -299,11 +299,11 @@ class EDD_Cart_Restrictions {
     public function editDownloadCategory( $term, $taxonomy ) {
         $field  = '<tr class="form-field">';
         $field .= '<th scope="row">';
-        $field .= '    <label>'.__( 'Excluded Categories in Cart', self::TEXT_DOAMIN ).'</label>';
+        $field .= '    <label>'.__( 'Excluded Categories in Cart', self::TEXT_DOMAIN ).'</label>';
         $field .= '</th>';
         $field .= '    <td>';
         $field .= self::termChecklist($term, 'download_category', self::CATEGORIES_META_KEY);
-        $field .= '    <p class="description">'.__( 'Select all categories of which downloads cannot be in the cart at the same time.', self::TEXT_DOAMIN ).'</p>';
+        $field .= '    <p class="description">'.__( 'Select all categories of which downloads cannot be in the cart at the same time.', self::TEXT_DOMAIN ).'</p>';
         $field .= '    </td>';
         $field .= '</tr>';
 
@@ -322,9 +322,9 @@ class EDD_Cart_Restrictions {
      */
     public function addDownloadTag($taxonomy) {
         $field  = '<div class="form-field">';
-        $field .= '    <label>'.__( 'Excluded Tags in Cart', self::TEXT_DOAMIN ).'</label>';
+        $field .= '    <label>'.__( 'Excluded Tags in Cart', self::TEXT_DOMAIN ).'</label>';
         $field .= self::termChecklist($term, 'download_tag', self::CATEGORIES_META_KEY);
-        $field .= '    <p class="description">'.__( 'Select all tags of which downloads cannot be in the cart at the same time.', self::TEXT_DOAMIN ).'</p>';
+        $field .= '    <p class="description">'.__( 'Select all tags of which downloads cannot be in the cart at the same time.', self::TEXT_DOMAIN ).'</p>';
         $field .= '</div>';
 
         echo $field;
@@ -344,11 +344,11 @@ class EDD_Cart_Restrictions {
     public function editDownloadTag( $term, $taxonomy ) {
         $field  = '<tr class="form-field">';
         $field .= '<th scope="row">';
-        $field .= '    <label>'.__( 'Excluded Tags in Cart', self::TEXT_DOAMIN ).'</label>';
+        $field .= '    <label>'.__( 'Excluded Tags in Cart', self::TEXT_DOMAIN ).'</label>';
         $field .= '</th>';
         $field .= '    <td>';
         $field .= self::termChecklist($term, 'download_tag', self::TAGS_META_KEY);
-        $field .= '    <p class="description">'.__( 'Select all tags of which downloads cannot be in the cart at the same time.', self::TEXT_DOAMIN ).'</p>';
+        $field .= '    <p class="description">'.__( 'Select all tags of which downloads cannot be in the cart at the same time.', self::TEXT_DOMAIN ).'</p>';
         $field .= '    </td>';
         $field .= '</tr>';
 
@@ -441,8 +441,8 @@ class EDD_Cart_Restrictions {
         $categories_names = self::termNames('download_category',$categories_ids);
         $tags_names = self::termNames('download_tag',$tags_ids);
 
-        echo '<strong>'.__( 'Categories', self::TEXT_DOAMIN ).':</strong><br>'.join(', ',$categories_names).'<br>';
-        echo '<strong>'.__( 'Tags', self::TEXT_DOAMIN ).':</strong><br>'.join(', ',$tags_names);
+        echo '<strong>'.__( 'Categories', self::TEXT_DOMAIN ).':</strong><br>'.join(', ',$categories_names).'<br>';
+        echo '<strong>'.__( 'Tags', self::TEXT_DOMAIN ).':</strong><br>'.join(', ',$tags_names);
 
         return $content;
     }
@@ -486,7 +486,7 @@ class EDD_Cart_Restrictions {
         if (empty($conflicts)) {
             return;
         }
-        echo '<a class="button red edd-submit">'.sprintf( __( 'This download cannot be added due to %d conflicting downloads in the cart.', self::TEXT_DOAMIN ), count($conflicts)).'</a>';
+        echo '<a class="button red edd-submit">'.sprintf( __( 'This download cannot be added due to %d conflicting downloads in the cart.', self::TEXT_DOMAIN ), count($conflicts)).'</a>';
         echo $this->conflictsTable($conflicts);
         echo '<div class="edd-cart-restrictions" style="display: none;">';
     }
@@ -508,7 +508,7 @@ class EDD_Cart_Restrictions {
         $table  = '<table>';
         $table .= '  <thead>';
         $table .= '    <tr>';
-        $table .= '      <th>'.__( 'Conflicting download in cart', self::TEXT_DOAMIN ).'</th>';
+        $table .= '      <th>'.__( 'Conflicting download in cart', self::TEXT_DOMAIN ).'</th>';
         $table .= '    </tr>';
         $table .= '  </thead>';
         $downloads = get_posts(array('post_type'=>'download','include'=>$conflicts,));
