@@ -4,7 +4,7 @@
  * Plugin Name: Easy Digital Downloads Cart restrictions
  * Plugin URI:  https://github.com/nwoetzel/edd-cart-restrictions
  * Description: This plugin extends easy-digital-downloads to restrict the items that can be added to the cart.
- * Version:     1.0.1
+ * Version:     1.1.0
  * Author:      Nils Woetzel
  * Author URI:  https://github.com/nwoetzel
  * Text Domain: edd-cart-restrictions
@@ -21,6 +21,8 @@ if( !class_exists( 'EDD_Cart_Restrictions' ) ) {
  * @since 1.0.0
  */
 class EDD_Cart_Restrictions {
+
+    CONST TEXT_DOMAIN = 'edd-cart-restrictions';
 
     /**
      * For a given download_id (key) a list (array) of conflicting downloads is stored.
@@ -49,7 +51,7 @@ class EDD_Cart_Restrictions {
             self::$instance = new EDD_Cart_Restrictions();
             self::$instance->setup_constants();
             self::$instance->includes();
-//            self::$instance->load_textdomain();
+            self::$instance->load_textdomain();
             self::$instance->registerMeta();
             self::$instance->hooks();
         }
@@ -148,6 +150,35 @@ class EDD_Cart_Restrictions {
     }
 
     /**
+     * Internationalization
+     *
+     * @access      public
+     * @since       1.1.0
+     * @return      void
+     */
+    public function load_textdomain() {
+        // Set filter for language directory
+        $lang_dir = EDD_CART_RESTRICTIONS_DIR . '/languages/';
+        $lang_dir = apply_filters( 'edd_cart_restrictions_languages_directory', $lang_dir );
+        // Traditional WordPress plugin locale filter
+        $locale = apply_filters( 'plugin_locale', get_locale(), self::TEXT_DOMAIN );
+        $mofile = sprintf( '%1$s-%2$s.mo', self::TEXT_DOMAIN, $locale );
+        // Setup paths to current locale file
+        $mofile_local   = $lang_dir . $mofile;
+        $mofile_global  = WP_LANG_DIR . '/' . self::TEXT_DOMAIN . '/' . $mofile;
+        if( file_exists( $mofile_global ) ) {
+            // Look in global /wp-content/languages/edd-cart-restrictions/ folder
+            load_textdomain( self::TEXT_DOMAIN, $mofile_global );
+        } elseif( file_exists( $mofile_local ) ) {
+            // Look in local /wp-content/plugins/edd-cart-restrictions/languages/ folder
+            load_textdomain( self::TEXT_DOMAIN, $mofile_local );
+        } else {
+            // Load the default language files
+            load_plugin_textdomain( self::TEXT_DOMAIN, false, 'edd-cart-restrictions/languages' );
+        }
+    }
+
+    /**
      * Add settings
      *
      * @access      public
@@ -159,14 +190,14 @@ class EDD_Cart_Restrictions {
         $plugin_settings_general = array(
             array(
                 'id'    => 'edd_cart_restrictions_settings_general',
-                'name'  => '<strong>' . __( 'Cart Restrictions General', 'edd-cart-restrictions' ) . '</strong>',
-                'desc'  => __( 'Configure general cart restriction settings', 'edd-cart-restrictions' ),
+                'name'  => '<strong>' . __( 'Cart Restrictions General', self::TEXT_DOMAIN ) . '</strong>',
+                'desc'  => __( 'Configure general cart restriction settings', self::TEXT_DOMAIN ),
                 'type'  => 'header',
             ),
             array(
                 'id'    => 'edd_cart_restrictions_settings_categories_tags_enabled',
-                'name'  => 'Restrictions on categories and tags enabled',
-                'desc'  => 'Enable category and tag based restrictions',
+                'name'  => __( 'Restrictions on categories and tags enabled', self::TEXT_DOMAIN ),
+                'desc'  => __( 'Enable category and tag based restrictions', self::TEXT_DOMAIN ),
                 'type'  => 'checkbox',
                 'settings' => array('edd_cart_restrictions_settings_categories_tags'),
             ),
@@ -191,7 +222,7 @@ class EDD_Cart_Restrictions {
      * @return      array The modified EDD settings array
      */
     public function settingsSection( $sections ) {
-        $sections['cart-restrictions-settings-general'] = 'Cart Restrictions General';
+        $sections['cart-restrictions-settings-general'] = __( 'Cart Restrictions General', self::TEXT_DOMAIN );
         return $sections;
     }
 
@@ -246,9 +277,9 @@ class EDD_Cart_Restrictions {
      */
     public function addDownloadCategory($taxonomy) {
         $field  = '<div class="form-field">';
-        $field .= '    <label>Excluded Categories in Cart</label>';
+        $field .= '    <label>'.__( 'Excluded Categories in Cart', self::TEXT_DOAMIN ).'</label>';
         $field .= self::termChecklist($term, 'download_category', self::CATEGORIES_META_KEY);
-        $field .= '    <p class="description">Select all categories of which downloads cannot be in the cart at the same time.</p>';
+        $field .= '    <p class="description">'.__( 'Select all categories of which downloads cannot be in the cart at the same time.', self::TEXT_DOAMIN ).'</p>';
         $field .= '</div>';
 
         echo $field;
@@ -268,11 +299,11 @@ class EDD_Cart_Restrictions {
     public function editDownloadCategory( $term, $taxonomy ) {
         $field  = '<tr class="form-field">';
         $field .= '<th scope="row">';
-        $field .= '    <label>Excluded Categories in Cart</label>';
+        $field .= '    <label>'.__( 'Excluded Categories in Cart', self::TEXT_DOAMIN ).'</label>';
         $field .= '</th>';
         $field .= '    <td>';
         $field .= self::termChecklist($term, 'download_category', self::CATEGORIES_META_KEY);
-        $field .= '    <p class="description">Select all categories of which downloads cannot be in the cart at the same time.</p>';
+        $field .= '    <p class="description">'.__( 'Select all categories of which downloads cannot be in the cart at the same time.', self::TEXT_DOAMIN ).'</p>';
         $field .= '    </td>';
         $field .= '</tr>';
 
@@ -291,9 +322,9 @@ class EDD_Cart_Restrictions {
      */
     public function addDownloadTag($taxonomy) {
         $field  = '<div class="form-field">';
-        $field .= '    <label>Excluded Tags in Cart</label>';
+        $field .= '    <label>'.__( 'Excluded Tags in Cart', self::TEXT_DOAMIN ).'</label>';
         $field .= self::termChecklist($term, 'download_tag', self::CATEGORIES_META_KEY);
-        $field .= '    <p class="description">Select all tags of which downloads cannot be in the cart at the same time.</p>';
+        $field .= '    <p class="description">'.__( 'Select all tags of which downloads cannot be in the cart at the same time.', self::TEXT_DOAMIN ).'</p>';
         $field .= '</div>';
 
         echo $field;
@@ -313,11 +344,11 @@ class EDD_Cart_Restrictions {
     public function editDownloadTag( $term, $taxonomy ) {
         $field  = '<tr class="form-field">';
         $field .= '<th scope="row">';
-        $field .= '    <label>Excluded Tags in Cart</label>';
+        $field .= '    <label>'.__( 'Excluded Tags in Cart', self::TEXT_DOAMIN ).'</label>';
         $field .= '</th>';
         $field .= '    <td>';
         $field .= self::termChecklist($term, 'download_tag', self::TAGS_META_KEY);
-        $field .= '    <p class="description">Select all tags of which downloads cannot be in the cart at the same time.</p>';
+        $field .= '    <p class="description">'.__( 'Select all tags of which downloads cannot be in the cart at the same time.', self::TEXT_DOAMIN ).'</p>';
         $field .= '    </td>';
         $field .= '</tr>';
 
@@ -410,8 +441,8 @@ class EDD_Cart_Restrictions {
         $categories_names = self::termNames('download_category',$categories_ids);
         $tags_names = self::termNames('download_tag',$tags_ids);
 
-        echo '<strong>Categories:</strong><br>'.join(', ',$categories_names).'<br>';
-        echo '<strong>Tags:</strong><br>'.join(', ',$tags_names);
+        echo '<strong>'.__( 'Categories', self::TEXT_DOAMIN ).':</strong><br>'.join(', ',$categories_names).'<br>';
+        echo '<strong>'.__( 'Tags', self::TEXT_DOAMIN ).':</strong><br>'.join(', ',$tags_names);
 
         return $content;
     }
@@ -455,7 +486,7 @@ class EDD_Cart_Restrictions {
         if (empty($conflicts)) {
             return;
         }
-        echo '<a class="button red edd-submit">This download cannot be added due to '.(count($conflicts)).' conflicting downloads in the cart</a>';
+        echo '<a class="button red edd-submit">'.sprintf( __( 'This download cannot be added due to %d conflicting downloads in the cart.', self::TEXT_DOAMIN ), count($conflicts)).'</a>';
         echo $this->conflictsTable($conflicts);
         echo '<div class="edd-cart-restrictions" style="display: none;">';
     }
@@ -477,7 +508,7 @@ class EDD_Cart_Restrictions {
         $table  = '<table>';
         $table .= '  <thead>';
         $table .= '    <tr>';
-        $table .= '      <th>Conflicting download in cart</th>';
+        $table .= '      <th>'.__( 'Conflicting download in cart', self::TEXT_DOAMIN ).'</th>';
         $table .= '    </tr>';
         $table .= '  </thead>';
         $downloads = get_posts(array('post_type'=>'download','include'=>$conflicts,));
