@@ -37,7 +37,7 @@ msgstr "Restriktionen auf Kategorien und Tags aktivieren"
 
 #: edd-cart-restrictions.php:200
 msgid "Enable category and tag based restrictions"
-msgstr "Aktiviere Kategorie und Tag basierende Restriktionen"
+msgstr "Aktiviere Kategorie und Schlagwort basierende Restriktionen"
 
 #: edd-cart-restrictions.php:280 edd-cart-restrictions.php:302
 msgid "Excluded Categories in Cart"
@@ -53,14 +53,14 @@ msgstr ""
 
 #: edd-cart-restrictions.php:325 edd-cart-restrictions.php:347
 msgid "Excluded Tags in Cart"
-msgstr "Schließe Tags im Einkaufswagen aus"
+msgstr "Schließe Schlagwörter im Einkaufswagen aus"
 
 #: edd-cart-restrictions.php:327 edd-cart-restrictions.php:351
 msgid ""
 "Select all tags of which downloads cannot be in the cart at the same time."
 msgstr ""
-"Wähle all Tags deren Downloads nicht gleichzeitig im Einkaufswagen "
-"vorhanden sein dürfen."
+"Wähle alle Schlagwörter deren Downloads nicht gleichzeitig im "
+"Einkaufswagen vorhanden sein dürfen."
 
 #: edd-cart-restrictions.php:444
 msgid "Categories"
@@ -68,7 +68,7 @@ msgstr "Kategorien"
 
 #: edd-cart-restrictions.php:445
 msgid "Tags"
-msgstr "Tags"
+msgstr "Schlagwörter"
 
 #: edd-cart-restrictions.php:489
 #, php-format
