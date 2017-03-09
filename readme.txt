@@ -3,7 +3,7 @@ Contributors: nwoetzel
 Tags: edd, easy digital downloads, cart, restriction
 Requires at least: 4.6
 Tested up to: 4.7.2
-Stable tag: 1.0.1
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,7 +23,7 @@ When a conflicting download is displayed, the purchase link (add to cart button)
 Download the latest release from github as zip and install it through wordpress.
 Or use [wp-cli](http://wp-cli.org/) with the latest release:
 <pre>
-wp-cli.phar plugin install https://github.com/nwoetzel/edd-cart-restrictions/archive/1.0.1.zip --activate
+wp-cli.phar plugin install https://github.com/nwoetzel/edd-cart-restrictions/archive/1.1.0.zip --activate
 </pre>
 
 == Frequently Asked Questions ==
