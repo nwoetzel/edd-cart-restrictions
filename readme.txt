@@ -37,6 +37,10 @@ In a future version, the cart before the checkout will be checked (which does no
 
 == Changelog ==
 
+= 1.1.0 =
+* added load_textdomain
+* added translation for de_DE
+
 = 1.0.1 =
 * array_merge with null meta data fixed
 * disabled purchase button lists the conflicting downloads in the cart
