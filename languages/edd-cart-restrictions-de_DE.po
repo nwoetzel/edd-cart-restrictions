@@ -25,7 +25,7 @@ msgstr ""
 
 #: edd-cart-restrictions.php:193 edd-cart-restrictions.php:225
 msgid "Cart Restrictions General"
-msgstr "Einkuafswagen Restriktionen Allgemein"
+msgstr "Einkaufswagen Restriktionen Allgemein"
 
 #: edd-cart-restrictions.php:194
 msgid "Configure general cart restriction settings"
