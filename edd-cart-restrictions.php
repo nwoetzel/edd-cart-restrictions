@@ -4,7 +4,7 @@
  * Plugin Name: Easy Digital Downloads Cart restrictions
  * Plugin URI:  https://github.com/nwoetzel/edd-cart-restrictions
  * Description: This plugin extends easy-digital-downloads to restrict the items that can be added to the cart.
- * Version:     1.1.0
+ * Version:     1.2.0
  * Author:      Nils Woetzel
  * Author URI:  https://github.com/nwoetzel
  * Text Domain: edd-cart-restrictions
@@ -71,7 +71,7 @@ class EDD_Cart_Restrictions {
      */
     private function setup_constants() {
         // Plugin version
-        define( 'EDD_CART_RESTRICTIONS_VER', '1.0.1' );
+        define( 'EDD_CART_RESTRICTIONS_VER', '1.2.0' );
         // Plugin path
         define( 'EDD_CART_RESTRICTIONS_DIR', plugin_dir_path( __FILE__ ) );
         // Plugin URL

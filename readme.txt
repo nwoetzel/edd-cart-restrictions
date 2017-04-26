@@ -3,7 +3,7 @@ Contributors: nwoetzel
 Tags: edd, easy digital downloads, cart, restriction
 Requires at least: 4.6
 Tested up to: 4.7.2
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -36,6 +36,9 @@ In a future version, the cart before the checkout will be checked (which does no
 == Screenshots ==
 
 == Changelog ==
+
+= 1.2.0 =
+* added support for composer http://composer.rarst.net/
 
 = 1.1.0 =
 * added load_textdomain
