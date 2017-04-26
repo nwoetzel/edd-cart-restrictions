@@ -13,6 +13,10 @@
 // Exit if accessed directly
 if( !defined( 'ABSPATH' ) ) exit;
 
+if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
+	require __DIR__ . '/vendor/autoload.php';
+}
+
 if( !class_exists( 'EDD_Cart_Restrictions' ) ) {
 
 /**
